@@ -1,3 +1,4 @@
+import os
 from conans import tools, CMake
 from conanfile_base import ConanFileBase
 from conans.tools import Version
@@ -15,7 +16,7 @@ class ConanFileDefault(ConanFileBase):
                "fPIC": [True, False],
                "lite": [True, False]}
     default_options = {"with_zlib": False,
-                       "shared": False,
+                       "shared": True,
                        "fPIC": True,
                        "lite": False}
 
@@ -39,15 +40,15 @@ class ConanFileDefault(ConanFileBase):
         cmake = CMake(self, set_cmake_flags=True)
         cmake.definitions["protobuf_BUILD_TESTS"] = False
         cmake.definitions["protobuf_WITH_ZLIB"] = self.options.with_zlib
-        cmake.definitions["protobuf_BUILD_PROTOC_BINARIES"] = not self.options.lite
-        cmake.definitions["protobuf_BUILD_PROTOBUF_LITE"] = self.options.lite
+        cmake.definitions["protobuf_BUILD_PROTOC_BINARIES"] = "OFF" if self.options.lite else "ON"
+        cmake.definitions["protobuf_BUILD_PROTOBUF_LITE"] = "ON" if self.options.lite else "OFF"
         if self.settings.compiler == "Visual Studio":
             cmake.definitions["protobuf_MSVC_STATIC_RUNTIME"] = "MT" in self.settings.compiler.runtime
         cmake.configure(build_folder=self._build_subfolder)
         return cmake
 
     def build(self):
-        tools.patch(base_path=self._source_subfolder, patch_file="protobuf.patch")
+       # tools.patch(base_path=self._source_subfolder, patch_file="protobuf.patch")
         cmake = self._configure_cmake()
         cmake.build()
 
@@ -69,3 +70,4 @@ class ConanFileDefault(ConanFileBase):
         if self.settings.os == "Windows":
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
+
